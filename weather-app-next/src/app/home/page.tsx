@@ -1,9 +1,9 @@
 "use client";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Layout } from "../../app/components/layout/Layout";
-import { useUserContext } from "../../context/UserContext"; 
-import { useVerifyLogin } from "../../helpers/useVerifyLogin";
+import { useUserContext } from "../../context/UserContext";
+import { Header } from "../components/header/Header";
 
 interface ClimateData {
   cidade: string;
@@ -23,11 +23,9 @@ interface ForecastItem {
 }
 
 export default function Home() {
-  useVerifyLogin(); // Chama a verificação de login
   const router = useRouter();
-  const { userName, cityCode } = useUserContext();
-
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { userName } = useUserContext(); // Usando o hook customizado
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [cityData, setCityData] = useState<ClimateData | null>(null);
   const [forecast, setForecast] = useState<ForecastItem[]>([]);
 
@@ -36,6 +34,7 @@ export default function Home() {
   };
 
   const loadCity = async (cityCode: number) => {
+    setIsLoading(true);
     try {
       const response = await fetch(
         `https://brasilapi.com.br/api/cptec/v1/clima/previsao/${cityCode}`
@@ -50,9 +49,15 @@ export default function Home() {
   };
 
   const loadForecast = async (cityCode: number) => {
+    const params = {
+      code: cityCode,
+      days: 6,
+    };
+
+    setIsLoading(true);
     try {
       const response = await fetch(
-        `https://brasilapi.com.br/api/cptec/v1/clima/previsao/${cityCode}/6`
+        `https://brasilapi.com.br/api/cptec/v1/clima/previsao/${params.code}/${params.days}`
       );
       const data = await response.json();
       setForecast(data.clima);
@@ -64,49 +69,40 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const inicialCity = cityCode || 244; // Use cityCode do UserContext ou um valor padrão
-    loadCity(inicialCity);
-    loadForecast(inicialCity);
-  }, [cityCode]);
+    const cityCode = router.query.cityCode ? Number(router.query.cityCode) : 244;
+    loadCity(cityCode);
+    loadForecast(cityCode);
+  }, [router.query]);
 
   return (
     <Layout>
-      <header>
-        {/* Cabeçalho aqui */}
-      </header>
+      <Header title="Inicio" userName={userName} />
 
       <div>
         {isLoading ? (
-          <p>Carregando...</p>
-        ) : cityData ? (
+          <p>Carregando</p>
+        ) : (
           <div>
             <h2>
-              {cityData.cidade}/{cityData.estado}
+              {cityData?.cidade}/{cityData?.estado}
             </h2>
             <p>
-              Min: <span>{cityData.clima[0].min}</span> / Max: 
-              <span>{cityData.clima[0].max}</span>
+              Min<span>{cityData?.clima[0].min}</span>/ Max
+              <span>{cityData?.clima[0].max}</span>
             </p>
-            <p>{cityData.clima[0].condicao_desc}</p>
+            <p>{cityData?.clima[0].condicao_desc}</p>
           </div>
-        ) : (
-          <p>Dados da cidade não disponíveis.</p>
         )}
       </div>
-
       <div>
-        {forecast.length > 0 ? (
-          forecast.map((item) => (
-            <div key={item.data}>
-              <span>{dateFormat(item.data)}</span>
-              <span>{item.condicao}</span>
-              <span>Min: {item.min}&#176;</span>
-              <span>Max: {item.max}&#176;</span>
-            </div>
-          ))
-        ) : (
-          <p>Previsão não disponível.</p>
-        )}
+        {forecast.map((item) => (
+          <div key={item.data}>
+            <span>{dateFormat(item.data)}</span>
+            <span>{item.condicao}</span>
+            <span>Min: {item.min}&#176;</span>
+            <span>Max: {item.max}&#176;</span>
+          </div>
+        ))}
       </div>
     </Layout>
   );
