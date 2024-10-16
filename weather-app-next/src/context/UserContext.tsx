@@ -1,16 +1,16 @@
-// src/context/UserContext.tsx
+import { createContext, useState, Dispatch, SetStateAction } from "react";
 
-import { createContext, useState, ReactNode } from "react";
 
 interface UserContextType {
   userName: string;
-  setUserName: (name: string) => void;
+  setUserName: Dispatch<SetStateAction<string>>;
 }
 
-const UserContext = createContext<UserContextType | null>(null);
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
 interface UserContextProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const UserContextProvider = ({ children }: UserContextProviderProps) => {

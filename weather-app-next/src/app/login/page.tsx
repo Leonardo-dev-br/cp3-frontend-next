@@ -1,7 +1,10 @@
 import { useContext, useState } from "react";
 import { useRouter } from "next/router";
-import { jwtDecode } from "jwt-decode";
-import UserContext from "../../../context/UserContext"; // Corrigido o nom
+import jwtDecode from "jwt-decode";
+import UserContext from "../../context/UserContext";
+import { Layout } from "../components/layout/Layout";
+import { Button } from "../components/button/Button";
+import { Input } from "../components/input/Input";
 
 export default function Login() {
   const { setUserName } = useContext(UserContext);
@@ -33,9 +36,7 @@ export default function Login() {
         sessionStorage.setItem("userToken", JSON.stringify(data));
         const userData = jwtDecode(data.token);
         setUserName(userData.name);
-        
-        // Alteração aqui
-        router.push("/perfil"); // Usando o router do Next.js
+        router.push("/perfil");
       }
     } catch (error) {
       console.log("error", error);
@@ -54,12 +55,29 @@ export default function Login() {
   };
 
   return (
-    <>
-        <h1>Login</h1>
-        <form>
-            
-        </form>
-    </>
+    <Layout>
+      <h1>Login</h1>
+      <form>
+        <Input
+          type="text"
+          id="login"
+          name="login"
+          label="Login"
+          onChange={handleLogin}
+          placeholder="digite seu email"
+        />
 
+        <Input
+          label="Senha"
+          type="password"
+          id="password"
+          name="password"
+          onChange={handlePassword}
+        />
+        <Button type="button" onClick={handleClick}>
+          Login
+        </Button>
+      </form>
+    </Layout>
   );
 }
